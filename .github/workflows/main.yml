@@ -1,0 +1,86 @@
+name: CI/CD - Blog Educacional
+
+on:
+  push:
+    branches: [develop, homolog, main]
+  pull_request:
+    branches: [homolog]
+
+env:
+  CI: true
+
+jobs:
+  test-and-deploy-develop:
+    if: "github.ref == 'refs/heads/develop'"
+    runs-on: ubuntu-latest
+    environment: 'development'
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Security audit (fail on high)
+        run: npm audit --audit-level=high
+
+      - name: Run tests
+        run: npm test -- --passWithNoTests --maxWorkers=2
+
+      - name: Simulate deploy to development
+        run: echo "[deploy] Simulated deployment to development environment"
+
+  test-and-deploy-homolog:
+    if: "github.ref == 'refs/heads/homolog' || github.event_name == 'pull_request'"
+    runs-on: ubuntu-latest
+    environment: 'pre-release'
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Security audit (fail on high)
+        run: npm audit --audit-level=high
+
+      - name: Run tests
+        run: npm test -- --passWithNoTests --maxWorkers=2
+
+      - name: Simulate deploy to pre-release
+        run: echo "[deploy] Simulated deployment to pre-release environment"
+
+  test-and-deploy-prod:
+    if: "github.ref == 'refs/heads/main'"
+    runs-on: ubuntu-latest
+    environment: 'production'
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Security audit (fail on high)
+        run: npm audit --audit-level=high
+
+      - name: Run tests
+        run: npm test -- --passWithNoTests --maxWorkers=2
+
+      - name: Simulate deploy to production
+        run: echo "[deploy] Simulated deployment to production environment"
